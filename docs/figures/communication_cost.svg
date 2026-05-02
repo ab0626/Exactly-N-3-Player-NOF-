@@ -11,10 +11,10 @@
 <circle cx="680.00" cy="70.00" r="4" fill="#2563eb"/>
 <rect x="698" y="78" width="14" height="14" fill="#2563eb"/>
 <text x="720" y="90" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Mean deterministic bits / round</text>
-<path d="M 90.00 450.00 L 286.67 450.00 L 483.33 450.00 L 680.00 450.00" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="90.00" cy="450.00" r="4" fill="#dc2626"/>
+<path d="M 90.00 449.87 L 286.67 450.00 L 483.33 449.85 L 680.00 450.00" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="90.00" cy="449.87" r="4" fill="#dc2626"/>
 <circle cx="286.67" cy="450.00" r="4" fill="#dc2626"/>
-<circle cx="483.33" cy="450.00" r="4" fill="#dc2626"/>
+<circle cx="483.33" cy="449.85" r="4" fill="#dc2626"/>
 <circle cx="680.00" cy="450.00" r="4" fill="#dc2626"/>
 <rect x="698" y="100" width="14" height="14" fill="#dc2626"/>
 <text x="720" y="112" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Mean nondeterministic bits / round</text>
