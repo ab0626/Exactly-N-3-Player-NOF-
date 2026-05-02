@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="90" y="40" font-size="20" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Density vs grid size (log-log)</text>
+<rect x="90" y="70" width="590" height="380" fill="#fafafa" stroke="#d1d5db" stroke-width="1"/>
+<text x="385.0" y="495" text-anchor="middle" font-size="14" font-family="Segoe UI, Arial, sans-serif" fill="#374151">Grid size N (log2 axis)</text>
+<text transform="translate(28,260.0) rotate(-90)" text-anchor="middle" font-size="14" font-family="Segoe UI, Arial, sans-serif" fill="#374151">Density (log10 axis)</text>
+<path d="M 90.00 373.14 L 286.67 407.50 L 483.33 416.87 L 680.00 450.00" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="90.00" cy="373.14" r="4" fill="#2563eb"/>
+<circle cx="286.67" cy="407.50" r="4" fill="#2563eb"/>
+<circle cx="483.33" cy="416.87" r="4" fill="#2563eb"/>
+<circle cx="680.00" cy="450.00" r="4" fill="#2563eb"/>
+<rect x="698" y="78" width="14" height="14" fill="#2563eb"/>
+<text x="720" y="90" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Observed mean lookup density</text>
+<path d="M 90.00 70.00 L 286.67 83.72 L 483.33 94.01 L 680.00 102.14" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="90.00" cy="70.00" r="4" fill="#dc2626"/>
+<circle cx="286.67" cy="83.72" r="4" fill="#dc2626"/>
+<circle cx="483.33" cy="94.01" r="4" fill="#dc2626"/>
+<circle cx="680.00" cy="102.14" r="4" fill="#dc2626"/>
+<rect x="698" y="100" width="14" height="14" fill="#dc2626"/>
+<text x="720" y="112" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Reference: ~1 / log log N</text>
+<path d="M 90.00 176.70 L 286.67 181.47 L 483.33 185.64 L 680.00 189.36" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="90.00" cy="176.70" r="4" fill="#16a34a"/>
+<circle cx="286.67" cy="181.47" r="4" fill="#16a34a"/>
+<circle cx="483.33" cy="185.64" r="4" fill="#16a34a"/>
+<circle cx="680.00" cy="189.36" r="4" fill="#16a34a"/>
+<rect x="698" y="122" width="14" height="14" fill="#16a34a"/>
+<text x="720" y="134" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Reference: exp(-(log N)^0.2)</text>
+</svg>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 from dataclasses import dataclass
+import html
 import math
 import random
 from pathlib import Path
@@ -244,8 +245,17 @@ def _safe_loglog(n: int) -> float:
     return math.log(max(math.log(max(float(n), 3.0)), 1.000001))
 
 
-def run_sweeps(output_dir: Path, rounds: int = 2000, seed: int = 0) -> None:
+def run_sweeps(
+    output_dir: Path,
+    rounds: int = 2000,
+    seed: int = 0,
+    figures_dir: Optional[Path] = None,
+    png_plots: bool = False,
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+    if figures_dir is None:
+        figures_dir = Path("docs") / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
     domain_sizes = [32, 64, 128, 256]
     bases = [6, 8, 10]
     thinnings = [1.0, 0.7, 0.4]
@@ -319,24 +329,18 @@ def run_sweeps(output_dir: Path, rounds: int = 2000, seed: int = 0) -> None:
                 }
             )
 
-    _try_make_plots(rows, output_dir)
+    _try_make_plots(rows, output_dir=output_dir, figures_dir=figures_dir, png_plots=png_plots)
     print(f"Sweep complete. Wrote: {csv_path}, {summary_path}")
 
 
-def _try_make_plots(rows: List[Dict[str, object]], output_dir: Path) -> None:
-    try:
-        import matplotlib.pyplot as plt  # type: ignore[reportMissingImports]
-    except Exception:
-        print("matplotlib not available; CSV tables were still generated.")
-        return
-
+def _aggregate_plot_series(rows: List[Dict[str, object]]) -> Dict[str, List[float]]:
     domain_sizes = sorted({int(r["domain_size"]) for r in rows})
-    mean_density = []
-    old_curve = []
-    new_curve = []
-    det_bits = []
-    nondet_bits = []
-    theory_lb = []
+    mean_density: List[float] = []
+    old_curve: List[float] = []
+    new_curve: List[float] = []
+    det_bits: List[float] = []
+    nondet_bits: List[float] = []
+    theory_lb: List[float] = []
 
     for n in domain_sizes:
         subset = [r for r in rows if int(r["domain_size"]) == n]
@@ -347,10 +351,180 @@ def _try_make_plots(rows: List[Dict[str, object]], output_dir: Path) -> None:
         nondet_bits.append(sum(float(r["nondet_avg_bits"]) for r in subset) / len(subset))
         theory_lb.append(sum(float(r["theory_lb_quasipoly_like"]) for r in subset) / len(subset))
 
+    return {
+        "domain_sizes": [float(n) for n in domain_sizes],
+        "mean_density": mean_density,
+        "old_curve": old_curve,
+        "new_curve": new_curve,
+        "det_bits": det_bits,
+        "nondet_bits": nondet_bits,
+        "theory_lb": theory_lb,
+    }
+
+
+def _svg_escape(text: str) -> str:
+    return html.escape(text, quote=True)
+
+
+def _write_multi_series_svg(
+    path: Path,
+    title: str,
+    x_values: List[float],
+    series: List[Dict[str, object]],
+    *,
+    x_log2: bool,
+    y_log10: bool,
+    x_label: str,
+    y_label: str,
+    width: int = 900,
+    height: int = 520,
+) -> None:
+    pad_l, pad_r, pad_t, pad_b = 90, 220, 70, 70
+    plot_w = width - pad_l - pad_r
+    plot_h = height - pad_t - pad_b
+
+    xs = [float(v) for v in x_values]
+    if x_log2:
+        x_src = [math.log(max(v, 1.0), 2) for v in xs]
+    else:
+        x_src = xs
+
+    transformed_series: List[Dict[str, object]] = []
+    all_y_plot: List[float] = []
+    y_eps = 1e-12
+    for s in series:
+        y_vals = [float(v) for v in s["y"]]  # type: ignore[index]
+        if y_log10:
+            y_plot = [math.log10(max(y, y_eps)) for y in y_vals]
+        else:
+            y_plot = y_vals
+        all_y_plot.extend(y_plot)
+        transformed_series.append({"meta": s, "y_plot": y_plot})
+
+    x_min, x_max = min(x_src), max(x_src)
+    y_min, y_max = min(all_y_plot), max(all_y_plot)
+    if x_max - x_min < 1e-12:
+        x_min -= 1e-6
+        x_max += 1e-6
+    if y_max - y_min < 1e-12:
+        y_min -= 1e-6
+        y_max += 1e-6
+
+    def x_to_px(xv: float) -> float:
+        return pad_l + (xv - x_min) / (x_max - x_min) * plot_w
+
+    def y_to_px(yv: float) -> float:
+        return pad_t + (y_max - yv) / (y_max - y_min) * plot_h
+
+    parts: List[str] = []
+    parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">')
+    parts.append('<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>')
+    parts.append(f'<text x="{pad_l}" y="40" font-size="20" font-family="Segoe UI, Arial, sans-serif" fill="#111827">{_svg_escape(title)}</text>')
+
+    # Plot frame
+    parts.append(
+        f'<rect x="{pad_l}" y="{pad_t}" width="{plot_w}" height="{plot_h}" fill="#fafafa" stroke="#d1d5db" stroke-width="1"/>'
+    )
+
+    # Axis labels
+    parts.append(
+        f'<text x="{pad_l + plot_w / 2}" y="{height - 25}" text-anchor="middle" font-size="14" font-family="Segoe UI, Arial, sans-serif" fill="#374151">{_svg_escape(x_label)}</text>'
+    )
+    parts.append(
+        f'<text transform="translate(28,{pad_t + plot_h / 2}) rotate(-90)" text-anchor="middle" font-size="14" font-family="Segoe UI, Arial, sans-serif" fill="#374151">{_svg_escape(y_label)}</text>'
+    )
+
+    legend_x = pad_l + plot_w + 18
+    legend_y = pad_t + 18
+
+    color_cycle = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ca8a04", "#0f766e"]
+    for idx, item in enumerate(transformed_series):
+        s = item["meta"]  # type: ignore[assignment]
+        y_plot = [float(v) for v in item["y_plot"]]  # type: ignore[index]
+        color = str(s.get("color", color_cycle[idx % len(color_cycle)]))
+        label = str(s["label"])
+
+        if x_log2:
+            x_plot = [math.log(max(v, 1.0), 2) for v in xs]
+        else:
+            x_plot = xs
+
+        pts = list(zip(x_plot, y_plot))
+
+        d_parts = []
+        for i, (xv, yv) in enumerate(pts):
+            px = x_to_px(xv)
+            py = y_to_px(yv)
+            d_parts.append(f"{'M' if i == 0 else 'L'} {px:.2f} {py:.2f}")
+        parts.append(f'<path d="{" ".join(d_parts)}" fill="none" stroke="{color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>')
+        for xv, yv in pts:
+            px = x_to_px(xv)
+            py = y_to_px(yv)
+            parts.append(f'<circle cx="{px:.2f}" cy="{py:.2f}" r="4" fill="{color}"/>')
+
+        # Legend row
+        ly = legend_y + idx * 22
+        parts.append(f'<rect x="{legend_x}" y="{ly - 10}" width="14" height="14" fill="{color}"/>')
+        parts.append(
+            f'<text x="{legend_x + 22}" y="{ly + 2}" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">{_svg_escape(label)}</text>'
+        )
+
+    parts.append("</svg>")
+    path.write_text("\n".join(parts), encoding="utf-8")
+
+
+def _write_sweep_figures_svg(series: Dict[str, List[float]], figures_dir: Path) -> None:
+    xs = series["domain_sizes"]
+    _write_multi_series_svg(
+        figures_dir / "density_vs_grid.svg",
+        "Density vs grid size (log-log)",
+        xs,
+        [
+            {"label": "Observed mean lookup density", "y": series["mean_density"], "color": "#2563eb"},
+            {"label": "Reference: ~1 / log log N", "y": series["old_curve"], "color": "#dc2626"},
+            {"label": "Reference: exp(-(log N)^0.2)", "y": series["new_curve"], "color": "#16a34a"},
+        ],
+        x_log2=True,
+        y_log10=True,
+        x_label="Grid size N (log2 axis)",
+        y_label="Density (log10 axis)",
+    )
+    _write_multi_series_svg(
+        figures_dir / "communication_cost.svg",
+        "Communication cost vs grid size",
+        xs,
+        [
+            {"label": "Mean deterministic bits / round", "y": series["det_bits"], "color": "#2563eb"},
+            {"label": "Mean nondeterministic bits / round", "y": series["nondet_bits"], "color": "#dc2626"},
+            {"label": "Reference curve: (log N)^0.2", "y": series["theory_lb"], "color": "#16a34a"},
+        ],
+        x_log2=True,
+        y_log10=False,
+        x_label="Grid size N (log2 axis)",
+        y_label="Bits (linear axis)",
+    )
+
+
+def _try_make_plots(rows: List[Dict[str, object]], *, output_dir: Path, figures_dir: Path, png_plots: bool) -> None:
+    series = _aggregate_plot_series(rows)
+    _write_sweep_figures_svg(series, figures_dir)
+    print(f"Figures (SVG) written under: {figures_dir}")
+
+    if not png_plots:
+        print("PNG plots skipped (pass --png-plots to attempt matplotlib PNG export).")
+        return
+
+    try:
+        import matplotlib.pyplot as plt  # type: ignore[reportMissingImports]
+    except Exception:
+        print("matplotlib not available; PNG plots skipped (SVG figures were still generated).")
+        return
+
+    domain_sizes_int = [int(x) for x in series["domain_sizes"]]
     plt.figure(figsize=(8, 5))
-    plt.plot(domain_sizes, mean_density, marker="o", label="Observed lookup density")
-    plt.plot(domain_sizes, old_curve, marker="x", label="Old-style 1/loglog N curve")
-    plt.plot(domain_sizes, new_curve, marker="s", label="Quasipoly-like exp(-(log N)^0.2)")
+    plt.plot(domain_sizes_int, series["mean_density"], marker="o", label="Observed lookup density")
+    plt.plot(domain_sizes_int, series["old_curve"], marker="x", label="Old-style 1/loglog N curve")
+    plt.plot(domain_sizes_int, series["new_curve"], marker="s", label="Quasipoly-like exp(-(log N)^0.2)")
     plt.xscale("log", base=2)
     plt.yscale("log")
     plt.xlabel("Grid size N")
@@ -362,9 +536,9 @@ def _try_make_plots(rows: List[Dict[str, object]], output_dir: Path) -> None:
     plt.close()
 
     plt.figure(figsize=(8, 5))
-    plt.plot(domain_sizes, det_bits, marker="o", label="Deterministic simulation bits")
-    plt.plot(domain_sizes, nondet_bits, marker="x", label="Nondeterministic simulation bits")
-    plt.plot(domain_sizes, theory_lb, marker="s", label="Cor.1.7-style LB shape (log N)^0.2")
+    plt.plot(domain_sizes_int, series["det_bits"], marker="o", label="Deterministic simulation bits")
+    plt.plot(domain_sizes_int, series["nondet_bits"], marker="x", label="Nondeterministic simulation bits")
+    plt.plot(domain_sizes_int, series["theory_lb"], marker="s", label="Cor.1.7-style LB shape (log N)^0.2")
     plt.xscale("log", base=2)
     plt.xlabel("Grid size N")
     plt.ylabel("Bits")
@@ -374,7 +548,7 @@ def _try_make_plots(rows: List[Dict[str, object]], output_dir: Path) -> None:
     plt.savefig(output_dir / "plot_communication_cost.png", dpi=160)
     plt.close()
 
-    print(f"Plots written under: {output_dir}")
+    print(f"Plots (PNG) written under: {output_dir}")
 
 
 def _load_csv_rows(path: Path) -> List[Dict[str, str]]:
@@ -512,13 +686,25 @@ def main() -> None:
     parser.add_argument("--rounds", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output-dir", default="outputs")
+    parser.add_argument("--figures-dir", default=str(Path("docs") / "figures"))
+    parser.add_argument(
+        "--png-plots",
+        action="store_true",
+        help="Also try to write PNG plots to --output-dir using matplotlib (optional; may fail depending on your Python/numpy stack).",
+    )
     args = parser.parse_args()
 
     if args.mode == "demo":
         demo()
         return
     if args.mode == "sweep":
-        run_sweeps(output_dir=Path(args.output_dir), rounds=args.rounds, seed=args.seed)
+        run_sweeps(
+            output_dir=Path(args.output_dir),
+            rounds=args.rounds,
+            seed=args.seed,
+            figures_dir=Path(args.figures_dir),
+            png_plots=args.png_plots,
+        )
         return
     report_path = generate_report(output_dir=Path(args.output_dir))
     print(f"Report written to: {report_path}")
