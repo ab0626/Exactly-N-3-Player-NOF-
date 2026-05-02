@@ -1,0 +1,16 @@
+# Generated experiment outputs (regenerate with: python exactly_n_protocol.py --mode sweep)
+outputs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+.venv/
+venv/
+ENV/
+
+# OS / editor
+.DS_Store
+Thumbs.db

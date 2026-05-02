@@ -1,0 +1,161 @@
+# Exactly-N (3-Player NOF) Mini Research Environment
+
+This project provides an educational mini-lab for the 3-player Number-on-Forehead (NOF) `Exactly-N` problem:
+
+- Alice, Bob, Charlie each hold one integer.
+- Each player sees the other two values (not their own).
+- They send short messages to help a referee decide whether `x + y + z = N`.
+
+It is designed as a **proof-of-concept laboratory**: not to re-prove the paper's theorems, but to make the corner-free-set to communication-complexity connection observable in code and data.
+
+## Project workflow (paper-aligned)
+
+- **Phase 1: combinatorics** - build a Behrend-style 3-AP-free set and induce a corner-free lookup on a grid.
+- **Phase 2: protocol mechanics** - run 3-player NOF communication with restricted local views.
+- **Phase 3: nondeterministic verification** - add a prover certificate that all players can check locally.
+- **Phase 4: empirical study** - sweep parameters and compare trends against theoretical curve shapes.
+- **Phase 5: reporting** - produce a professor-ready markdown report from experiment outputs.
+
+## What is implemented
+
+- `Referee` class:
+  - Creates shared public data (corner-free lookup table from Behrend-style set).
+  - Runs both deterministic and nondeterministic protocol variants.
+  - Produces simulation statistics and communication cost estimates.
+- `Player` class:
+  - Computes an implied own value from observed pair and target `N`.
+  - Sends a compact message (`own_guess mod p` + one corner-lookup certificate bit).
+- `Prover` + certificate mode:
+  - In nondeterministic mode, a prover proposes a certificate `(x, y)` in the lookup set.
+  - Each player verifies certificate consistency from local NOF view.
+  - If all 3 accept, referee outputs YES.
+- Corner-free lookup:
+  - Built from a Behrend-style 3-AP-free set.
+  - Lifted to a corner-free subset in a 2D grid via a difference-map construction.
+- Sweep engine:
+  - Varies grid size, Behrend base, lookup thinning (density), and prime modulus.
+  - Records deterministic and nondeterministic accuracy + bits.
+  - Writes `outputs/sweep_results.csv` and `outputs/summary_table.csv`.
+
+## Why this matches the paper theme
+
+The paper highlights the connection between corner-free sets and NOF communication for `Exactly-N`.  
+This code mirrors that theme by using a corner-free set as public combinatorial structure for message design.
+
+## Run
+
+From this directory:
+
+```bash
+python exactly_n_protocol.py --mode demo
+python exactly_n_protocol.py --mode sweep --rounds 2000 --output-dir outputs
+python exactly_n_protocol.py --mode report --output-dir outputs
+```
+
+## Quickstart (for presentation/demo)
+
+Use this exact sequence:
+
+1. `python exactly_n_protocol.py --mode demo`
+2. `python exactly_n_protocol.py --mode sweep --rounds 2000 --seed 0 --output-dir outputs`
+3. `python exactly_n_protocol.py --mode report --output-dir outputs`
+
+Then present:
+
+- `outputs/summary_table.csv` (aggregated quantitative results),
+- `outputs/report.md` (auto-generated interpretation),
+- `outputs/plot_density_vs_grid.png` and `outputs/plot_communication_cost.png` (if plotting is available).
+
+## CLI reference
+
+- `--mode`:
+  - `demo`: runs one deterministic and one nondeterministic sample, plus aggregate stats.
+  - `sweep`: runs parameter sweeps and writes experiment tables (and optional plots).
+  - `report`: generates a markdown report from existing sweep outputs.
+- `--rounds` (default `2000`): number of Monte Carlo rounds per sweep configuration.
+- `--seed` (default `0`): seed used for sweep randomness and reproducibility.
+- `--output-dir` (default `outputs`): directory where CSVs/plots/report are written.
+
+Demo mode prints:
+
+- one sample round (messages and verdict)
+- deterministic and nondeterministic aggregate statistics
+
+Sweep mode writes:
+
+- a detailed experiment table: `outputs/sweep_results.csv`
+- an aggregated table by grid size: `outputs/summary_table.csv`
+- optional plots (if `matplotlib` is usable in your environment):
+  - `outputs/plot_density_vs_grid.png`
+  - `outputs/plot_communication_cost.png`
+- sweep dimensions:
+  - grid sizes: `32, 64, 128, 256`
+  - Behrend base: `6, 8, 10`
+  - lookup thinning: `1.0, 0.7, 0.4`
+  - prime modulus: `17, 31, 61`
+
+Report mode writes:
+
+- `outputs/report.md` with best configurations, scaling deltas, and paper-alignment notes.
+- requires sweep CSVs to exist first (`sweep_results.csv` and `summary_table.csv`).
+
+## Output file guide
+
+- `outputs/sweep_results.csv`:
+  - one row per configuration of `(N, base, thinning, p)`,
+  - includes deterministic/nondeterministic accuracy and average bits,
+  - includes heuristic reference curves for side-by-side plotting.
+- `outputs/summary_table.csv`:
+  - aggregated means grouped by `domain_size`,
+  - useful for trend analysis and slide/table inclusion.
+- `outputs/report.md`:
+  - highlights best-accuracy and lowest-bit configurations,
+  - summarizes growth/delta trends across tested `N`,
+  - includes concise "paper alignment" discussion points.
+- optional PNG plots:
+  - `plot_density_vs_grid.png`: observed lookup density vs reference density curves,
+  - `plot_communication_cost.png`: observed bits vs lower-bound-shaped proxy curve.
+
+## Interpreting results
+
+- **Accuracy columns**:
+  - `det_accuracy` / `mean_det_accuracy`: how often deterministic message rule matches ground truth.
+  - `nondet_accuracy` / `mean_nondet_accuracy`: same for certificate protocol.
+- **Communication columns**:
+  - `det_avg_bits`: average bits/round for deterministic mode (depends on modulus-based message width).
+  - `nondet_avg_bits`: average bits/round for nondeterministic mode (certificate + player accept bits, averaged over all rounds).
+- **Density columns**:
+  - `lookup_density` or `mean_lookup_density`: proxy for combinatorial richness of allowed structure.
+  - decreasing density generally makes valid witness acceptance rarer.
+- **Reference/theory columns**:
+  - `old_density_curve_1_over_loglogN`: old-style very-slow-saving shape (for visual comparison).
+  - `new_density_curve_exp_logN_0p2`: quasipolynomial-style decay proxy.
+  - `theory_lb_quasipoly_like`: communication lower-bound proxy with `(log N)^c` form.
+
+## Suggested talking points for a professor
+
+- **Thinning <-> Relative Sifting intuition**: varying `lookup_thinning` empirically stress-tests protocol behavior inside sparse containers, echoing the paper's focus on extracting structure in pseudorandom/sparse settings.
+- **Nondeterministic certificate verification**: the prover + local checks model the NOF witness paradigm in Section 1.2, where shared certificates and local consistency constraints drive communication complexity statements.
+- **Before/after curve comparison**: plotting `1/loglog N` against quasipolynomial-style decay proxies demonstrates understanding of the paper's "old regime vs breakthrough regime" narrative.
+- **Behrend regime realism**: using a Behrend-style 3-AP-free base set (rather than uniform random points) aligns the experiment with the lower-bound benchmark language repeatedly referenced in the paper.
+- **Communication-growth perspective**: comparing measured bits to a `(log N)^c`-shaped proxy captures the qualitative direction of Corollary 1.7-style lower-bound growth.
+- **Methodological honesty**: this is framed as a reproducibility-style computational probe, not a formal derivation of Theorems 1.1/1.3.
+
+## Presentation Q&A (ready-to-use)
+
+- **Q: Why use a prime modulus in player messages?**  
+  **A:** It gives an algebraic communication channel that approximates the finite-field flavor used in the paper's conceptual setup (e.g., work over vector spaces like `F_2^n`). In this project, modulus arithmetic is a practical proxy for structured algebraic messaging, not a literal implementation of the full Fourier-analytic machinery.
+
+- **Q: Does this code prove the quasipolynomial bound?**  
+  **A:** No. It validates the *shape* of the corner-free-set to communication link empirically. The proofs in the paper are substantially deeper and rely on density-increment, relative sifting, and pseudorandomization arguments beyond simulation.
+
+- **Q: Why is the `demo -> sweep -> report` sequence important?**  
+  **A:** It mirrors a reproducibility-study flow: immediate mechanism check (`demo`), systematic evidence collection (`sweep`), and compact interpretation (`report`).
+
+## Notes
+
+- This is a toy protocol intended for intuition, not an optimal/rigorous lower-bound construction.
+- The nondeterministic certificate mode is designed to mirror the paper's NOF flavor: shared certificate plus local verifiability.
+- Reference curves in sweep output (`1/loglog N`, `exp(-(log N)^0.2)`, and `(log N)^0.2`) are heuristic visualization aids.
+- If plotting dependencies are unavailable or incompatible, sweep still succeeds and CSV outputs are still generated.
+- In this environment, `matplotlib` may fail if local binary builds are mismatched with installed `numpy`; CSV/report outputs remain unaffected.
