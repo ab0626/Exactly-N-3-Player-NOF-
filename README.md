@@ -235,6 +235,16 @@ Report mode writes:
 - **Q: Why is the `demo -> sweep -> report` sequence important?**  
   **A:** It mirrors a reproducibility-study flow: immediate mechanism check (`demo`), systematic evidence collection (`sweep`), and compact interpretation (`report`).
 
+## Branching (optional)
+
+This repo’s default branch is **`main`** (the version you’ll most likely show a professor).
+
+There is also a **`dev`** branch intended for iterative work:
+
+- **Typical flow:** commit changes on `dev`, then merge into `main` when stable.
+- **GitHub PR UI:** if GitHub suggests opening a pull request, that page is just a convenient review/merge workflow for `dev` → `main` (optional for solo projects).
+- **CLI merge (solo):** `git checkout main && git merge dev && git push`
+
 ## References (where the mathematical story comes from)
 
 Primary source (the paper this project is aligned with):
