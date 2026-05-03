@@ -235,6 +235,25 @@ Report mode writes:
 - **Q: Why is the `demo -> sweep -> report` sequence important?**  
   **A:** It mirrors a reproducibility-study flow: immediate mechanism check (`demo`), systematic evidence collection (`sweep`), and compact interpretation (`report`).
 
+## References (where the mathematical story comes from)
+
+Primary source (the paper this project is aligned with):
+
+- Michael Jaber, Yang P. Liu, Shachar Lovett, Anthony Ostuni, and Mehtaab Sawhney, *Quasipolynomial bounds for the corners theorem*, **arXiv:2504.07006v2** (14 Jul 2025).  
+  - Canonical PDF landing page: `https://arxiv.org/abs/2504.07006`  
+  - PDF: `https://arxiv.org/pdf/2504.07006v2.pdf`
+
+What this README is (and is not) importing from that PDF:
+
+- **Imported as “real mathematical context” (citable):**
+  - The **corners** pattern definition and the paper’s main **quantitative upper bound** direction for corner-free sets (see Abstract + Theorem 1.1).
+  - The **Number-on-Forehead (NOF)** discussion and **Exactly-N** consequences emphasized in **Section 1.2** (including the Chandra–Furst–Lipton connection as cited there).
+  - The **Behrend construction** as the standard **benchmark lower-bound regime** discussed in the introductory comparison to prior work (not re-derived here).
+- **Not copied into this README (by design):**
+  - The full proof body (Sections 2–8, Appendix A), including **relative sifting**, **Bohr-set / pseudorandomization**, and **grid-norm increment** arguments.
+
+If you need a line-by-line proof companion, keep it separate from `README.md` (e.g., course notes or a `docs/` note). The README stays a **map + runnable lab**, not a textbook chapter.
+
 ## Notes
 
 - This is a toy protocol intended for intuition, not an optimal/rigorous lower-bound construction.
