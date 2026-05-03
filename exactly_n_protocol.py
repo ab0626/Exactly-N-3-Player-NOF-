@@ -15,6 +15,40 @@ from typing import Dict, List, Optional, Set, Tuple
 Pair = Tuple[int, int]
 
 
+@dataclass(frozen=True)
+class ProtocolConfig:
+    """
+    Pedagogical protocol knobs (NOT a faithful implementation of the paper's proof steps).
+
+    - asymmetric_mode relaxes the diagonal player's certificate consistency check.
+    - sifting_noise perturbs observed forehead values to emulate "noisy local views".
+    - bohr_dim scales that noise (a phenomenological "complexity" dial for heatmaps).
+    """
+
+    asymmetric_mode: bool = False
+    xy_tolerance: int = 0
+    diag_tolerance: int = 0
+    sifting_noise: float = 0.0
+    bohr_dim: int = 0
+
+
+def _ring_distance(a: int, b: int, mod: int) -> int:
+    if mod <= 0:
+        return abs(a - b)
+    diff = (a - b) % mod
+    return min(diff, mod - diff)
+
+
+def _maybe_perturb_view(value: int, domain_size: int, rng: random.Random, noise_prob: float) -> int:
+    if domain_size <= 0 or noise_prob <= 0.0:
+        return value
+    if rng.random() >= noise_prob:
+        return value
+    # Single-step ring noise: +/-1 with equal probability (keeps changes local).
+    delta = -1 if rng.random() < 0.5 else 1
+    return (value + delta) % domain_size
+
+
 def _base_digits(value: int, base: int, width: int) -> List[int]:
     digits = [0] * width
     x = value
@@ -136,10 +170,12 @@ class Referee:
         bucket_rank: int = 0,
         thinning: float = 1.0,
         seed: int = 0,
+        protocol: Optional[ProtocolConfig] = None,
     ) -> None:
         self.domain_size = domain_size
         self.target_n = target_n
         self.prime_modulus = prime_modulus
+        self.protocol = protocol or ProtocolConfig()
         self.corner_lookup = corner_free_lookup_from_behrend(
             domain_size=domain_size,
             base=behrend_base,
@@ -152,10 +188,25 @@ class Referee:
         self.charlie = Player("Charlie", prime_modulus, self.corner_lookup, domain_size)
         self.prover = Prover()
 
-    def run_round(self, x: int, y: int, z: int) -> Dict[str, object]:
-        m_a = self.alice.send(y, z, self.target_n)
-        m_b = self.bob.send(x, z, self.target_n)
-        m_c = self.charlie.send(x, y, self.target_n)
+    def _noise_prob(self) -> float:
+        base = max(self.protocol.sifting_noise, 0.0)
+        dim = max(self.protocol.bohr_dim, 0)
+        return min(1.0, base * (1.0 + dim / 10.0))
+
+    def run_round(self, x: int, y: int, z: int, rng: Optional[random.Random] = None) -> Dict[str, object]:
+        rng = rng or random.Random()
+        noise_prob = self._noise_prob()
+        # Alice sees (y,z); Bob sees (x,z); Charlie sees (x,y).
+        y_a = _maybe_perturb_view(y, self.domain_size, rng, noise_prob)
+        z_a = _maybe_perturb_view(z, self.domain_size, rng, noise_prob)
+        x_b = _maybe_perturb_view(x, self.domain_size, rng, noise_prob)
+        z_b = _maybe_perturb_view(z, self.domain_size, rng, noise_prob)
+        x_c = _maybe_perturb_view(x, self.domain_size, rng, noise_prob)
+        y_c = _maybe_perturb_view(y, self.domain_size, rng, noise_prob)
+
+        m_a = self.alice.send(y_a, z_a, self.target_n)
+        m_b = self.bob.send(x_b, z_b, self.target_n)
+        m_c = self.charlie.send(x_c, y_c, self.target_n)
         messages = [m_a, m_b, m_c]
         modular_sum = (m_a.own_guess_mod_p + m_b.own_guess_mod_p + m_c.own_guess_mod_p) % self.prime_modulus
         modular_ok = modular_sum == (self.target_n % self.prime_modulus)
@@ -170,7 +221,16 @@ class Referee:
             "bits_total": bits_total,
         }
 
-    def run_nondet_round(self, x: int, y: int, z: int) -> Dict[str, object]:
+    def run_nondet_round(self, x: int, y: int, z: int, rng: Optional[random.Random] = None) -> Dict[str, object]:
+        rng = rng or random.Random()
+        noise_prob = self._noise_prob()
+        y_a = _maybe_perturb_view(y, self.domain_size, rng, noise_prob)
+        z_a = _maybe_perturb_view(z, self.domain_size, rng, noise_prob)
+        x_b = _maybe_perturb_view(x, self.domain_size, rng, noise_prob)
+        z_b = _maybe_perturb_view(z, self.domain_size, rng, noise_prob)
+        x_c = _maybe_perturb_view(x, self.domain_size, rng, noise_prob)
+        y_c = _maybe_perturb_view(y, self.domain_size, rng, noise_prob)
+
         cert = self.prover.propose(x, y, z, self.target_n, self.corner_lookup, self.domain_size)
         truth_yes = (x + y + z == self.target_n)
         if cert is None:
@@ -185,11 +245,12 @@ class Referee:
 
         cx, cy = cert.pair_xy
         # Local NOF checks using only seen pair + certificate.
-        alice_implied_x = self.target_n - y - z
-        bob_implied_y = self.target_n - x - z
-        alice_ok = (0 <= alice_implied_x < self.domain_size) and (cx == alice_implied_x) and (cy == y)
-        bob_ok = (0 <= bob_implied_y < self.domain_size) and (cx == x) and (cy == bob_implied_y)
-        charlie_ok = (cx == x) and (cy == y)
+        alice_implied_x = self.target_n - y_a - z_a
+        bob_implied_y = self.target_n - x_b - z_b
+        alice_ok = (0 <= alice_implied_x < self.domain_size) and (_ring_distance(cx, alice_implied_x, self.domain_size) <= self.protocol.xy_tolerance) and (_ring_distance(cy, y_a, self.domain_size) <= self.protocol.xy_tolerance)
+        bob_ok = (0 <= bob_implied_y < self.domain_size) and (_ring_distance(cx, x_b, self.domain_size) <= self.protocol.xy_tolerance) and (_ring_distance(cy, bob_implied_y, self.domain_size) <= self.protocol.xy_tolerance)
+        diag_tol = self.protocol.diag_tolerance if self.protocol.asymmetric_mode else self.protocol.xy_tolerance
+        charlie_ok = (_ring_distance(cx, x_c, self.domain_size) <= diag_tol) and (_ring_distance(cy, y_c, self.domain_size) <= diag_tol)
         lookup_ok = cert.pair_xy in self.corner_lookup
         accepts = [alice_ok and lookup_ok, bob_ok and lookup_ok, charlie_ok and lookup_ok]
         accepted_players = sum(1 for ok in accepts if ok)
@@ -213,7 +274,7 @@ class Referee:
             x = rng.randrange(self.domain_size)
             y = rng.randrange(self.domain_size)
             z = rng.randrange(self.domain_size)
-            result = self.run_nondet_round(x, y, z) if nondet else self.run_round(x, y, z)
+            result = self.run_nondet_round(x, y, z, rng=rng) if nondet else self.run_round(x, y, z, rng=rng)
             total_bits += int(result["bits_total"])
             if result["correct"]:
                 correct += 1
@@ -245,22 +306,215 @@ def _safe_loglog(n: int) -> float:
     return math.log(max(math.log(max(float(n), 3.0)), 1.000001))
 
 
+def theorem11_density_proxy(n: int, c: float, exponent: float = 600.0) -> float:
+    """
+    Shape-only proxy aligned with Theorem 1.1's displayed exponent family: exp(-c (log N)^{1/600}).
+
+    This is a visualization aid; constants are not tuned to match the paper's unspecified c.
+    """
+    logn = math.log(max(float(n), 2.0))
+    return math.exp(-max(c, 0.0) * (logn ** (1.0 / max(exponent, 1e-9))))
+
+
+def _heatmap_color(t: float) -> str:
+    """Map t in [0,1] to a blue->white->red ramp."""
+    t = min(max(t, 0.0), 1.0)
+    if t < 0.5:
+        s = t / 0.5
+        r = int(255 * s)
+        g = int(255 * s)
+        b = 255
+    else:
+        s = (t - 0.5) / 0.5
+        r = 255
+        g = int(255 * (1.0 - s))
+        b = int(255 * (1.0 - s))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def run_heatmap_sweep(
+    *,
+    output_dir: Path,
+    figures_dir: Path,
+    domain_size: int,
+    behrend_base: int,
+    prime_modulus: int,
+    seed: int,
+    rounds: int,
+    thinnings: List[float],
+    bohr_dims: List[int],
+    protocol_template: ProtocolConfig,
+    theorem_c: float,
+    theorem_exp: float,
+) -> None:
+    """
+    Phenomenological heatmap: deterministic accuracy vs (lookup thinning ~ density) and bohr_dim dial.
+
+    This is NOT Theorem 7.9's probability output; it is a toy reliability surface for pedagogy.
+    """
+    rows: List[Dict[str, object]] = []
+    target_n = domain_size - 1
+    matrix: List[List[float]] = []
+
+    for d in bohr_dims:
+        row_vals: List[float] = []
+        for thinning in thinnings:
+            proto = ProtocolConfig(
+                asymmetric_mode=protocol_template.asymmetric_mode,
+                xy_tolerance=protocol_template.xy_tolerance,
+                diag_tolerance=protocol_template.diag_tolerance,
+                sifting_noise=protocol_template.sifting_noise,
+                bohr_dim=d,
+            )
+            ref = Referee(
+                domain_size=domain_size,
+                target_n=target_n,
+                prime_modulus=prime_modulus,
+                behrend_base=behrend_base,
+                bucket_rank=0,
+                thinning=thinning,
+                seed=seed,
+                protocol=proto,
+            )
+            det = ref.simulate(rounds=rounds, seed=seed + 101)
+            acc = float(det["accuracy"])
+            row_vals.append(acc)
+            rows.append(
+                {
+                    "domain_size": domain_size,
+                    "behrend_base": behrend_base,
+                    "prime_modulus": prime_modulus,
+                    "thinning": thinning,
+                    "bohr_dim": d,
+                    "det_accuracy": acc,
+                    "lookup_density": det["lookup_density"],
+                    "asymmetric_mode": int(proto.asymmetric_mode),
+                    "xy_tolerance": proto.xy_tolerance,
+                    "diag_tolerance": proto.diag_tolerance,
+                    "sifting_noise": proto.sifting_noise,
+                    "ref_theorem11_density_shape": theorem11_density_proxy(domain_size, c=theorem_c, exponent=theorem_exp),
+                }
+            )
+        matrix.append(row_vals)
+
+    csv_path = output_dir / "heatmap_sweep.csv"
+    with csv_path.open("w", newline="", encoding="utf-8") as fp:
+        writer = csv.DictWriter(fp, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    # SVG heatmap
+    width, height = 760, 620
+    margin_l, margin_r, margin_t, margin_b = 90, 40, 70, 90
+    cell_w = (width - margin_l - margin_r) / max(len(thinnings), 1)
+    cell_h = (height - margin_t - margin_b) / max(len(bohr_dims), 1)
+
+    parts: List[str] = []
+    parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">')
+    parts.append('<rect width="100%" height="100%" fill="#ffffff"/>')
+    title = "Phenomenological reliability heatmap (toy protocol)"
+    parts.append(
+        f'<text x="{margin_l}" y="42" font-size="18" font-family="Segoe UI, Arial, sans-serif" fill="#111827">{_svg_escape(title)}</text>'
+    )
+    subtitle = "Color = deterministic accuracy; X = thinning proxy; Y = Bohr-dimension noise dial"
+    parts.append(
+        f'<text x="{margin_l}" y="64" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#4b5563">{_svg_escape(subtitle)}</text>'
+    )
+
+    for i, d in enumerate(bohr_dims):
+        for j, thinning in enumerate(thinnings):
+            val = matrix[i][j]
+            x0 = margin_l + j * cell_w
+            y0 = margin_t + i * cell_h
+            parts.append(f'<rect x="{x0:.2f}" y="{y0:.2f}" width="{cell_w:.2f}" height="{cell_h:.2f}" fill="{_heatmap_color(val)}" stroke="#e5e7eb" stroke-width="1"/>')
+            parts.append(
+                f'<text x="{x0 + cell_w / 2:.2f}" y="{y0 + cell_h / 2 + 4:.2f}" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">{val:.2f}</text>'
+            )
+
+    # X labels
+    for j, thinning in enumerate(thinnings):
+        x = margin_l + j * cell_w + cell_w / 2
+        y = height - 55
+        t_label = f"t={thinning}"
+        parts.append(
+            f'<text x="{x:.2f}" y="{y:.2f}" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">{_svg_escape(t_label)}</text>'
+        )
+    parts.append(
+        f'<text x="{margin_l + (len(thinnings) * cell_w) / 2:.2f}" y="{height - 22:.2f}" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Thinning proxy (affects lookup density)</text>'
+    )
+
+    # Y labels
+    for i, d in enumerate(bohr_dims):
+        x = margin_l - 12
+        y = margin_t + i * cell_h + cell_h / 2 + 4
+        d_label = f"d={d}"
+        parts.append(
+            f'<text x="{x:.2f}" y="{y:.2f}" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">{_svg_escape(d_label)}</text>'
+        )
+    parts.append(
+        f'<text transform="translate(22,{margin_t + (len(bohr_dims) * cell_h) / 2:.2f}) rotate(-90)" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Bohr dimension dial (noise amplifier)</text>'
+    )
+
+    # Reference annotation (Theorem 1.1 shape at fixed N)
+    ref = theorem11_density_proxy(domain_size, c=theorem_c, exponent=theorem_exp)
+    ann = (
+        f"Theorem 1.1 density shape proxy at N={domain_size}: "
+        f"exp(-c*(log N)^(1/{int(theorem_exp)})) = {ref:.3e} (c={theorem_c}; not tuned)"
+    )
+    parts.append(
+        f'<text x="{margin_l}" y="{height - 6:.2f}" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#6b7280">{_svg_escape(ann)}</text>'
+    )
+
+    parts.append("</svg>")
+    heatmap_path = figures_dir / "heatmap_reliability.svg"
+    heatmap_path.write_text("\n".join(parts), encoding="utf-8")
+    print(f"Heatmap sweep wrote: {csv_path} and {heatmap_path}")
+
+
 def run_sweeps(
     output_dir: Path,
     rounds: int = 2000,
     seed: int = 0,
     figures_dir: Optional[Path] = None,
     png_plots: bool = False,
+    sweep_kind: str = "grid",
+    theorem_c: float = 1.0,
+    theorem_exp: float = 600.0,
+    protocol: Optional[ProtocolConfig] = None,
+    heatmap_domain: int = 64,
+    heatmap_base: int = 8,
+    heatmap_modulus: int = 31,
+    heatmap_thinnings: Optional[List[float]] = None,
+    heatmap_dims: Optional[List[int]] = None,
+    heatmap_rounds: int = 400,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     if figures_dir is None:
         figures_dir = Path("docs") / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
+    if sweep_kind == "heatmap":
+        run_heatmap_sweep(
+            output_dir=output_dir,
+            figures_dir=figures_dir,
+            domain_size=heatmap_domain,
+            behrend_base=heatmap_base,
+            prime_modulus=heatmap_modulus,
+            seed=seed,
+            rounds=heatmap_rounds,
+            thinnings=heatmap_thinnings or [1.0, 0.85, 0.7, 0.55, 0.4, 0.25],
+            bohr_dims=heatmap_dims or [0, 1, 2, 3, 4, 5, 6],
+            protocol_template=protocol or ProtocolConfig(),
+            theorem_c=theorem_c,
+            theorem_exp=theorem_exp,
+        )
+        return
+
     domain_sizes = [32, 64, 128, 256]
     bases = [6, 8, 10]
     thinnings = [1.0, 0.7, 0.4]
     moduli = [17, 31, 61]
     rows: List[Dict[str, object]] = []
+    proto = protocol or ProtocolConfig()
 
     for n in domain_sizes:
         target_n = n - 1
@@ -275,6 +529,7 @@ def run_sweeps(
                         bucket_rank=0,
                         thinning=thinning,
                         seed=seed,
+                        protocol=proto,
                     )
                     det = ref.simulate(rounds=rounds, seed=seed + 11)
                     nd = ref.simulate_nondet(rounds=rounds, seed=seed + 29)
@@ -284,6 +539,11 @@ def run_sweeps(
                         "behrend_base": base,
                         "thinning": thinning,
                         "prime_modulus": p,
+                        "asymmetric_mode": int(proto.asymmetric_mode),
+                        "xy_tolerance": proto.xy_tolerance,
+                        "diag_tolerance": proto.diag_tolerance,
+                        "sifting_noise": proto.sifting_noise,
+                        "bohr_dim": proto.bohr_dim,
                         "lookup_density": det["lookup_density"],
                         "det_accuracy": det["accuracy"],
                         "det_avg_bits": det["avg_bits_per_round"],
@@ -291,7 +551,8 @@ def run_sweeps(
                         "nondet_avg_bits": nd["avg_bits_per_round"],
                         # Heuristic reference curves for visualization.
                         "old_density_curve_1_over_loglogN": 1.0 / max(_safe_loglog(n), 1e-9),
-                        "new_density_curve_exp_logN_0p2": math.exp(-(logn ** 0.2)),
+                        "ref_theorem11_density_shape": theorem11_density_proxy(n, c=theorem_c, exponent=theorem_exp),
+                        "legacy_new_density_curve_exp_logN_0p2": math.exp(-(logn ** 0.2)),
                         "theory_lb_quasipoly_like": logn ** 0.2,
                     }
                     rows.append(row)
@@ -346,7 +607,7 @@ def _aggregate_plot_series(rows: List[Dict[str, object]]) -> Dict[str, List[floa
         subset = [r for r in rows if int(r["domain_size"]) == n]
         mean_density.append(sum(float(r["lookup_density"]) for r in subset) / len(subset))
         old_curve.append(sum(float(r["old_density_curve_1_over_loglogN"]) for r in subset) / len(subset))
-        new_curve.append(sum(float(r["new_density_curve_exp_logN_0p2"]) for r in subset) / len(subset))
+        new_curve.append(sum(float(r["ref_theorem11_density_shape"]) for r in subset) / len(subset))
         det_bits.append(sum(float(r["det_avg_bits"]) for r in subset) / len(subset))
         nondet_bits.append(sum(float(r["nondet_avg_bits"]) for r in subset) / len(subset))
         theory_lb.append(sum(float(r["theory_lb_quasipoly_like"]) for r in subset) / len(subset))
@@ -482,7 +743,7 @@ def _write_sweep_figures_svg(series: Dict[str, List[float]], figures_dir: Path) 
         [
             {"label": "Observed mean lookup density", "y": series["mean_density"], "color": "#2563eb"},
             {"label": "Reference: ~1 / log log N", "y": series["old_curve"], "color": "#dc2626"},
-            {"label": "Reference: exp(-(log N)^0.2)", "y": series["new_curve"], "color": "#16a34a"},
+            {"label": "Theorem 1.1 shape proxy: exp(-c*(log N)^(1/600))", "y": series["new_curve"], "color": "#16a34a"},
         ],
         x_log2=True,
         y_log10=True,
@@ -524,7 +785,7 @@ def _try_make_plots(rows: List[Dict[str, object]], *, output_dir: Path, figures_
     plt.figure(figsize=(8, 5))
     plt.plot(domain_sizes_int, series["mean_density"], marker="o", label="Observed lookup density")
     plt.plot(domain_sizes_int, series["old_curve"], marker="x", label="Old-style 1/loglog N curve")
-    plt.plot(domain_sizes_int, series["new_curve"], marker="s", label="Quasipoly-like exp(-(log N)^0.2)")
+    plt.plot(domain_sizes_int, series["new_curve"], marker="s", label="Theorem 1.1 shape proxy exp(-c*(log N)^(1/600))")
     plt.xscale("log", base=2)
     plt.yscale("log")
     plt.xlabel("Grid size N")
@@ -680,6 +941,16 @@ def demo() -> None:
     print("Nondeterministic stats:", ref.simulate_nondet(rounds=2000, seed=42))
 
 
+def _parse_float_list(text: str) -> List[float]:
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    return [float(p) for p in parts]
+
+
+def _parse_int_list(text: str) -> List[int]:
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    return [int(p) for p in parts]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Exactly-N NOF mini research environment")
     parser.add_argument("--mode", choices=["demo", "sweep", "report"], default="demo")
@@ -688,11 +959,51 @@ def main() -> None:
     parser.add_argument("--output-dir", default="outputs")
     parser.add_argument("--figures-dir", default=str(Path("docs") / "figures"))
     parser.add_argument(
+        "--sweep-kind",
+        choices=["grid", "heatmap"],
+        default="grid",
+        help="grid: full parameter sweep + line plots; heatmap: reliability surface + heatmap_sweep.csv",
+    )
+    parser.add_argument(
+        "--theorem-c",
+        type=float,
+        default=1.0,
+        help="Multiplicative constant c in exp(-c*(log N)^(1/E)), where E is --theorem-exp. Not tuned to match the paper's implicit constant c.",
+    )
+    parser.add_argument("--theorem-exp", type=float, default=600.0, help="Exponent denominator for Theorem 1.1 shape proxy (paper uses 600 in Theorem 1.1).")
+    parser.add_argument("--asymmetric", action="store_true", help="Enable asymmetric diagonal tolerance in certificate checks.")
+    parser.add_argument("--xy-tol", type=int, default=0, help="Ring L1 tolerance for Alice/Bob certificate checks (integers mod domain).")
+    parser.add_argument("--diag-tol", type=int, default=1, help="Ring L1 tolerance for Charlie certificate checks when --asymmetric is set.")
+    parser.add_argument("--sifting-noise", type=float, default=0.0, help="Base probability to perturb each observed forehead coordinate (pedagogical noise).")
+    parser.add_argument("--bohr-dim", type=int, default=0, help="Heatmap/noise dial: amplifies sifting noise (not a literal Bohr rank in this repo).")
+    parser.add_argument("--heatmap-domain", type=int, default=64)
+    parser.add_argument("--heatmap-base", type=int, default=8)
+    parser.add_argument("--heatmap-modulus", type=int, default=31)
+    parser.add_argument("--heatmap-rounds", type=int, default=400)
+    parser.add_argument(
+        "--heatmap-thinnings",
+        default="1.0,0.85,0.7,0.55,0.4,0.25",
+        help="Comma-separated thinning values for heatmap X axis.",
+    )
+    parser.add_argument(
+        "--heatmap-dims",
+        default="0,1,2,3,4,5,6",
+        help="Comma-separated Bohr-dimension dial values for heatmap Y axis.",
+    )
+    parser.add_argument(
         "--png-plots",
         action="store_true",
         help="Also try to write PNG plots to --output-dir using matplotlib (optional; may fail depending on your Python/numpy stack).",
     )
     args = parser.parse_args()
+
+    protocol = ProtocolConfig(
+        asymmetric_mode=bool(args.asymmetric),
+        xy_tolerance=max(args.xy_tol, 0),
+        diag_tolerance=max(args.diag_tol, 0),
+        sifting_noise=max(args.sifting_noise, 0.0),
+        bohr_dim=max(args.bohr_dim, 0),
+    )
 
     if args.mode == "demo":
         demo()
@@ -704,6 +1015,16 @@ def main() -> None:
             seed=args.seed,
             figures_dir=Path(args.figures_dir),
             png_plots=args.png_plots,
+            sweep_kind=args.sweep_kind,
+            theorem_c=args.theorem_c,
+            theorem_exp=args.theorem_exp,
+            protocol=protocol,
+            heatmap_domain=args.heatmap_domain,
+            heatmap_base=args.heatmap_base,
+            heatmap_modulus=args.heatmap_modulus,
+            heatmap_thinnings=_parse_float_list(args.heatmap_thinnings),
+            heatmap_dims=_parse_int_list(args.heatmap_dims),
+            heatmap_rounds=args.heatmap_rounds,
         )
         return
     report_path = generate_report(output_dir=Path(args.output_dir))

@@ -18,11 +18,11 @@
 <circle cx="680.00" cy="102.14" r="4" fill="#dc2626"/>
 <rect x="698" y="100" width="14" height="14" fill="#dc2626"/>
 <text x="720" y="112" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Reference: ~1 / log log N</text>
-<path d="M 90.00 176.70 L 286.67 181.47 L 483.33 185.64 L 680.00 189.36" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="90.00" cy="176.70" r="4" fill="#16a34a"/>
-<circle cx="286.67" cy="181.47" r="4" fill="#16a34a"/>
-<circle cx="483.33" cy="185.64" r="4" fill="#16a34a"/>
-<circle cx="680.00" cy="189.36" r="4" fill="#16a34a"/>
+<path d="M 90.00 148.62 L 286.67 148.65 L 483.33 148.68 L 680.00 148.70" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="90.00" cy="148.62" r="4" fill="#16a34a"/>
+<circle cx="286.67" cy="148.65" r="4" fill="#16a34a"/>
+<circle cx="483.33" cy="148.68" r="4" fill="#16a34a"/>
+<circle cx="680.00" cy="148.70" r="4" fill="#16a34a"/>
 <rect x="698" y="122" width="14" height="14" fill="#16a34a"/>
-<text x="720" y="134" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Reference: exp(-(log N)^0.2)</text>
+<text x="720" y="134" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Theorem 1.1 shape proxy: exp(-c*(log N)^(1/600))</text>
 </svg>

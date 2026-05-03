@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="620" viewBox="0 0 760 620">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="90" y="42" font-size="18" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Phenomenological reliability heatmap (toy protocol)</text>
+<text x="90" y="64" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#4b5563">Color = deterministic accuracy; X = thinning proxy; Y = Bohr-dimension noise dial</text>
+<rect x="90.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="70.00" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="106.86" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="135.71" width="105.00" height="65.71" fill="#ff0404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="172.57" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="201.43" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="238.29" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="267.14" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="304.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="332.86" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="369.71" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="398.57" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="435.43" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="90.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="142.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="195.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="247.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="300.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="352.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="405.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="457.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="510.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="562.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<rect x="615.00" y="464.29" width="105.00" height="65.71" fill="#ff0202" stroke="#e5e7eb" stroke-width="1"/>
+<text x="667.50" y="501.14" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#111827">0.99</text>
+<text x="142.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=1.0</text>
+<text x="247.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=0.85</text>
+<text x="352.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=0.7</text>
+<text x="457.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=0.55</text>
+<text x="562.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=0.4</text>
+<text x="667.50" y="565.00" text-anchor="middle" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">t=0.25</text>
+<text x="405.00" y="598.00" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Thinning proxy (affects lookup density)</text>
+<text x="78.00" y="106.86" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=0</text>
+<text x="78.00" y="172.57" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=1</text>
+<text x="78.00" y="238.29" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=2</text>
+<text x="78.00" y="304.00" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=3</text>
+<text x="78.00" y="369.71" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=4</text>
+<text x="78.00" y="435.43" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=5</text>
+<text x="78.00" y="501.14" text-anchor="end" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#374151">d=6</text>
+<text transform="translate(22,300.00) rotate(-90)" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#111827">Bohr dimension dial (noise amplifier)</text>
+<text x="90" y="614.00" font-size="11" font-family="Segoe UI, Arial, sans-serif" fill="#6b7280">Theorem 1.1 density shape proxy at N=64: exp(-c*(log N)^(1/600)) = 3.670e-01 (c=1.0; not tuned)</text>
+</svg>
